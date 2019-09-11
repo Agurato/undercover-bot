@@ -10,15 +10,16 @@ import (
 
 const (
 	// Commands
-	cmdPlay		string = "!play"
-	cmdJoin		string = "!join"
-	cmdStart	string = "!start"
-	cmdVote		string = "!vote"
-	cmdKick		string = "!kick"
+	cmdPlay  string = "!play"
+	cmdJoin  string = "!join"
+	cmdStart string = "!start"
+	cmdVote  string = "!vote"
+	cmdKick  string = "!kick"
 )
 
 var (
-	botID 	string
+	game  Game
+	botID string
 )
 
 func CheckError(msg string, err error) {
@@ -29,7 +30,7 @@ func CheckError(msg string, err error) {
 }
 
 func main() {
-	discord, err := discordgo.New("Bot ")
+	discord, err := discordgo.New("Bot " + os.Args[1])
 	CheckError("Error creating discord session", err)
 	user, err := discord.User("@me")
 	CheckError("Error retrieving account", err)
@@ -57,8 +58,6 @@ func main() {
 }
 
 func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
-	var game Game
-
 	// Ignore all messages created by the bot itself
 	if m.Author.ID == botID {
 		return

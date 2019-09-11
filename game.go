@@ -6,11 +6,12 @@ import (
 )
 
 type Team uint8
+
 func (team Team) String() string {
-	names := map[Team]string {
-		Citizen: "Citizen",
+	names := map[Team]string{
+		Citizen:    "Citizen",
 		Undercover: "Undercover",
-		MrWhite: "Mr. White",
+		MrWhite:    "Mr. White",
 	}
 
 	return names[team]
@@ -19,37 +20,37 @@ func (team Team) String() string {
 type GameState uint8
 
 type Player struct {
-	user	*discordgo.User
-	team 	Team
+	user *discordgo.User
+	team Team
 }
 
 type Game struct {
-	session		*discordgo.Session
-	channel		*discordgo.Channel
-	state 		GameState
-	players 	[]Player
+	session *discordgo.Session
+	channel *discordgo.Channel
+	state   GameState
+	players []Player
 }
 
 const (
 	// Team enum
-	None		Team = 0
-	Citizen 	Team = 1
-	Undercover 	Team = 2
-	MrWhite 	Team = 3
+	None       Team = 0
+	Citizen    Team = 1
+	Undercover Team = 2
+	MrWhite    Team = 3
 
 	// Game state enum
-	Off			GameState = 0
-	Waiting		GameState = 1
-	Running		GameState = 2
+	Off     GameState = 0
+	Waiting GameState = 1
+	Running GameState = 2
 
 	// Max number of players
-	playerMin 	int = 4
+	playerMin int = 4
 )
 
 func (g *Game) AddPlayer(user *discordgo.User) (msg string) {
-	g.players = append(g.players, Player{user:user, team:None})
+	g.players = append(g.players, Player{user: user, team: None})
 	msg = fmt.Sprintf("%s joined the game. %d player(s) total have joined.\n", user.Mention(), len(g.players))
-	if game.IsReady() {
+	if g.IsReady() {
 		msg += fmt.Sprintf("%s can start the game by typing `%s` in channel %s\n", g.players[0].user.Mention(), cmdStart, g.channel.Mention())
 	}
 	return msg
