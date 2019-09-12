@@ -107,8 +107,25 @@ func (g *Game) Start(undercoverNumber, mrWhiteNumber int64) {
 	g.SendMessage("The game has started. You all have received your word via private message")
 }
 
-func (g *Game) SendWords(word1, word2 string) {
-	// TODO: Send Words to players as private message
+func (g *Game) SendWords(word1, word2 string) bool {
+	for _, p := range g.players {
+		userChannel, err := g.session.UserChannelCreate(p.user.ID)
+		if err != nil {
+			g.SendMessage("The bot couldn't send the players' words")
+			return false
+		}
+		wordMsg := fmt.Sprintf("You are a member of Team **%s**.", p.team.String())
+		switch p.team {
+		case Citizen:
+			wordMsg += fmt.Sprintf("Your word is **%s**.\n", word1)
+		case Undercover:
+			wordMsg += fmt.Sprintf("Your word is **%s**.\n", word2)
+		case MrWhite:
+			wordMsg += fmt.Sprintf("You don't have a word.\n")
+		}
+		_, _ = g.session.ChannelMessageSend(userChannel.ID, wordMsg)
+	}
+	return true
 }
 
 func GenerateWords() (word1, word2 string) {
