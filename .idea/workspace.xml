@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9272908f-363b-4cdf-bc67-d9b34d91c1d2" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/go_build___run.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/go_build___run.xml" afterDir="false" />
+    <list default="true" id="9272908f-363b-4cdf-bc67-d9b34d91c1d2" name="Default Changelist" comment="Implement SetRandomTeams to players">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/game.go" beforeDir="false" afterPath="$PROJECT_DIR$/game.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/game_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/game_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -28,6 +30,7 @@
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
     <property name="DefaultGoTemplateProperty" value="Go File" />
+    <property name="GO_FMT" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="go.import.settings.migrated" value="true" />
@@ -45,6 +48,33 @@
       </list>
     </option>
   </component>
+  <component name="RunManager" selected="Go Build.go build github.com/Agurato/undercover-bot">
+    <configuration name="go build github.com/Agurato/undercover-bot" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+      <module name="undercover-bot" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <go_parameters value="-i" />
+      <kind value="DIRECTORY" />
+      <filePath value="$PROJECT_DIR$/" />
+      <package value="github.com/Agurato/undercover-bot" />
+      <directory value="$PROJECT_DIR$/" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test undercover-bot" type="GoTestRunConfiguration" factoryName="Go Test" nameIsGenerated="true">
+      <module name="undercover-bot" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <go_parameters value="-i" />
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+      <package value="github.com/Agurato/undercover-bot" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Go Build.go build github.com/Agurato/undercover-bot" />
+      <item itemvalue="Go Test.go test undercover-bot" />
+    </list>
+  </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
@@ -58,5 +88,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Fix game as global variable" />
+    <MESSAGE value="Implement SetRandomTeams to players" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implement SetRandomTeams to players" />
   </component>
 </project>

@@ -3,9 +3,13 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"math/rand"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
+	"time"
 )
 
 const (
@@ -30,6 +34,8 @@ func CheckError(msg string, err error) {
 }
 
 func main() {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	discord, err := discordgo.New("Bot " + os.Args[1])
 	CheckError("Error creating discord session", err)
 	user, err := discord.User("@me")
@@ -65,11 +71,12 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// If a command is called
 	if m.Content[0] == '!' {
+		args := strings.Split(m.Content, " ")
 		// Check game state
 		switch game.state {
 		// If the game is off
 		case Off:
-			switch m.Content {
+			switch args[0] {
 			// If the play command is called
 			case cmdPlay:
 				// Get the channel where the game is being played
@@ -78,6 +85,12 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				// Set game state to "waiting for players"
 				game.SetState(Waiting)
 				msg := game.AddPlayer(m.Author)
+
+				// TODO: Remove, this is for easy tests
+				for i := 0; i < 3; i++ {
+					msg += game.AddPlayer(m.Author)
+				}
+
 				// Sends message to channel
 				_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s started an **Undercover** game!\n%d players are required to start, type `%s` in %s to join.\nOnly %s can type `%s` to start the game.\n%s",
 					m.Author.Mention(),
@@ -99,7 +112,7 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		// Is the game is waiting for players
 		case Waiting:
-			switch m.Content {
+			switch args[0] {
 			// Using play command while another game is started results in an error
 			case cmdPlay:
 				_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("A game is currently waiting for players. Join it by typing `%s` in %s", cmdJoin, game.channel.Mention()))
@@ -113,8 +126,16 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			case cmdStart:
 				if game.IsOnSameChannel(s, m) {
 					if m.Author.ID == game.GetCreator().ID {
-						if game.IsReady() {
-							game.Start()
+						if len(args) != 3 {
+							_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("To start the game, use `%s <number of %s> <number of %s>`", cmdStart, Undercover.String(), MrWhite.String()))
+						} else if game.IsReady() {
+							undercoverNumber, err1 := strconv.ParseInt(args[1], 10, 32)
+							mrWhiteNumber, err2 := strconv.ParseInt(args[2], 10, 32)
+							if err1 != nil || err2 != nil || undercoverNumber < 0 || mrWhiteNumber < 0 {
+								_, _ = s.ChannelMessageSend(m.ChannelID, "The arguments must be whole positive numbers")
+							} else {
+								game.Start(undercoverNumber, mrWhiteNumber)
+							}
 						} else {
 							_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%d players are required to start a game, %d have joined", playerMin, len(game.players)))
 						}
@@ -130,7 +151,7 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("A game is currently waiting for players. Join it by typing `%s` in %s", cmdJoin, game.channel.Mention()))
 			}
 		case Running:
-			switch m.Content {
+			switch args[0] {
 			case cmdPlay:
 				fallthrough
 			case cmdJoin:

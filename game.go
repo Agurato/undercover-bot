@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"math/rand"
 )
 
 type Team uint8
@@ -60,6 +61,26 @@ func (g *Game) SetState(state GameState) {
 	g.state = state
 }
 
+func (g *Game) SetRandomTeams(undercoverNumber, mrWhiteNumber int64) {
+	playersTeamNone := make([]int, len(g.players))
+	for i := 0; i < len(playersTeamNone); i++ {
+		playersTeamNone[i] = i
+	}
+	for i := 0; i < int(undercoverNumber); i++ {
+		index := rand.Intn(len(playersTeamNone))
+		g.players[playersTeamNone[index]].team = Undercover
+		playersTeamNone = append(playersTeamNone[:index], playersTeamNone[index+1:]...)
+	}
+	for i := 0; i < int(mrWhiteNumber); i++ {
+		index := rand.Intn(len(playersTeamNone))
+		g.players[playersTeamNone[index]].team = MrWhite
+		playersTeamNone = append(playersTeamNone[:index], playersTeamNone[index+1:]...)
+	}
+	for i := 0; i < len(playersTeamNone); i++ {
+		g.players[playersTeamNone[i]].team = Citizen
+	}
+}
+
 func (g Game) IsReady() bool {
 	return len(g.players) >= playerMin
 }
@@ -77,7 +98,22 @@ func (g Game) SendMessage(msg string) {
 	_, _ = g.session.ChannelMessageSend(g.channel.ID, msg)
 }
 
-func (g *Game) Start() {
+func (g *Game) Start(undercoverNumber, mrWhiteNumber int64) {
 	g.SetState(Running)
+
+	g.SetRandomTeams(undercoverNumber, mrWhiteNumber)
+	g.SendWords(GenerateWords())
+
 	g.SendMessage("The game has started. You all have received your word via private message")
+}
+
+func (g *Game) SendWords(word1, word2 string) {
+	// TODO: Send Words to players as private message
+}
+
+func GenerateWords() (word1, word2 string) {
+	word1 = "pomme"
+	word2 = "poire"
+
+	return
 }
