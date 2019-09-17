@@ -13,12 +13,14 @@ import (
 )
 
 const (
+	prefixCmd string = "uc!"
+
 	// Commands
-	cmdPlay  string = "!play"
-	cmdJoin  string = "!join"
-	cmdStart string = "!start"
-	cmdVote  string = "!vote"
-	cmdKick  string = "!kick"
+	cmdPlay  = prefixCmd + "play"
+	cmdJoin  = prefixCmd + "join"
+	cmdStart = prefixCmd + "start"
+	cmdVote  = prefixCmd + "vote"
+	cmdKick  = prefixCmd + "kick"
 )
 
 var (
@@ -35,6 +37,8 @@ func CheckError(msg string, err error) {
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
+
+	go startServer()
 
 	discord, err := discordgo.New("Bot " + os.Args[1])
 	CheckError("Error creating discord session", err)
@@ -70,7 +74,7 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	// If a command is called
-	if m.Content[0] == '!' {
+	if strings.HasPrefix(m.Content, prefixCmd) {
 		args := strings.Split(m.Content, " ")
 		// Check game state
 		switch game.state {
@@ -88,7 +92,10 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 				// TODO: Remove, this is for easy tests
 				for i := 0; i < 3; i++ {
-					msg += game.AddPlayer(m.Author)
+					dummy := discordgo.User{
+						ID: fmt.Sprintf("dummy%d", i),
+					}
+					msg += game.AddPlayer(&dummy)
 				}
 
 				// Sends message to channel

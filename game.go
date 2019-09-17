@@ -49,6 +49,12 @@ const (
 )
 
 func (g *Game) AddPlayer(user *discordgo.User) (msg string) {
+	// Check that the player isn't already in the game
+	for _, p := range g.players {
+		if user.ID == p.user.ID {
+			return fmt.Sprintf("%s, you already joined the game!\n", user.Mention())
+		}
+	}
 	g.players = append(g.players, Player{user: user, team: None})
 	msg = fmt.Sprintf("%s joined the game. %d player(s) total have joined.\n", user.Mention(), len(g.players))
 	if g.IsReady() {
@@ -59,6 +65,13 @@ func (g *Game) AddPlayer(user *discordgo.User) (msg string) {
 
 func (g *Game) SetState(state GameState) {
 	g.state = state
+}
+
+func (g *Game) Reset() {
+	g.session = nil
+	g.channel = nil
+	g.players = nil
+	g.SetState(Off)
 }
 
 func (g *Game) SetRandomTeams(undercoverNumber, mrWhiteNumber int64) {
@@ -102,30 +115,42 @@ func (g *Game) Start(undercoverNumber, mrWhiteNumber int64) {
 	g.SetState(Running)
 
 	g.SetRandomTeams(undercoverNumber, mrWhiteNumber)
-	g.SendWords(GenerateWords())
 
-	g.SendMessage("The game has started. You all have received your word via private message")
+	// TODO: remove the following lines
+	g.SendWords(GenerateWords())
+	g.SendMessage(fmt.Sprintf("The game has started. You all have received your word via private message.\nYou can start voting for a player with `%s @player` in private message", cmdVote))
+
+	// TODO: uncomment the following lines to close the game
+	//if g.SendWords(GenerateWords()) {
+	//	g.SendMessage(fmt.Sprintf("The game has started. You all have received your word via private message.\nYou can start voting for a player with `%s @player` in private message", cmdVote))
+	//} else {
+	//	g.SendMessage("Some players didn't receive their word. Exiting the game...")
+	//	g.Reset()
+	//}
+
 }
 
 func (g *Game) SendWords(word1, word2 string) bool {
+	success := true
 	for _, p := range g.players {
 		userChannel, err := g.session.UserChannelCreate(p.user.ID)
 		if err != nil {
-			g.SendMessage("The bot couldn't send the players' words")
-			return false
+			g.SendMessage(fmt.Sprintf("The bot couldn't send the word to %s", p.user.Mention()))
+			success = false
+			continue
 		}
-		wordMsg := fmt.Sprintf("You are a member of Team **%s**.", p.team.String())
+		var wordMsg string
 		switch p.team {
 		case Citizen:
-			wordMsg += fmt.Sprintf("Your word is **%s**.\n", word1)
+			wordMsg = fmt.Sprintf("Your word is **%s**.\n", word1)
 		case Undercover:
-			wordMsg += fmt.Sprintf("Your word is **%s**.\n", word2)
+			wordMsg = fmt.Sprintf("Your word is **%s**.\n", word2)
 		case MrWhite:
-			wordMsg += fmt.Sprintf("You don't have a word.\n")
+			wordMsg = fmt.Sprintf("You are a %s, you don't have a word.\n", MrWhite.String())
 		}
 		_, _ = g.session.ChannelMessageSend(userChannel.ID, wordMsg)
 	}
-	return true
+	return success
 }
 
 func GenerateWords() (word1, word2 string) {
