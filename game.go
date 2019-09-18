@@ -6,39 +6,17 @@ import (
 	"math/rand"
 )
 
-type Team uint8
-
-func (team Team) String() string {
-	names := map[Team]string{
-		Citizen:    "Citizen",
-		Undercover: "Undercover",
-		MrWhite:    "Mr. White",
-	}
-
-	return names[team]
-}
-
 type GameState uint8
-
-type Player struct {
-	user *discordgo.User
-	team Team
-}
 
 type Game struct {
 	session *discordgo.Session
 	channel *discordgo.Channel
 	state   GameState
 	players []Player
+	votes   map[string]uint
 }
 
 const (
-	// Team enum
-	None       Team = 0
-	Citizen    Team = 1
-	Undercover Team = 2
-	MrWhite    Team = 3
-
 	// Game state enum
 	Off     GameState = 0
 	Waiting GameState = 1
@@ -48,6 +26,16 @@ const (
 	playerMin int = 4
 )
 
+func (state GameState) String() string {
+	states := map[GameState]string{
+		Off:     "Off",
+		Waiting: "Waiting",
+		Running: "Running",
+	}
+
+	return states[state]
+}
+
 func (g *Game) AddPlayer(user *discordgo.User) (msg string) {
 	// Check that the player isn't already in the game
 	for _, p := range g.players {
@@ -55,12 +43,24 @@ func (g *Game) AddPlayer(user *discordgo.User) (msg string) {
 			return fmt.Sprintf("%s, you already joined the game!\n", user.Mention())
 		}
 	}
+
 	g.players = append(g.players, Player{user: user, team: None})
 	msg = fmt.Sprintf("%s joined the game. %d player(s) total have joined.\n", user.Mention(), len(g.players))
 	if g.IsReady() {
 		msg += fmt.Sprintf("%s can start the game by typing `%s` in channel %s\n", g.players[0].user.Mention(), cmdStart, g.channel.Mention())
 	}
 	return msg
+}
+
+func (g Game) GetPlayerFromId(id string) (player Player) {
+	for _, p := range g.players {
+		if id == p.user.ID {
+			player = p
+			return
+		}
+	}
+
+	return
 }
 
 func (g *Game) SetState(state GameState) {
@@ -71,6 +71,7 @@ func (g *Game) Reset() {
 	g.session = nil
 	g.channel = nil
 	g.players = nil
+	g.votes = nil
 	g.SetState(Off)
 }
 
@@ -118,7 +119,8 @@ func (g *Game) Start(undercoverNumber, mrWhiteNumber int64) {
 
 	// TODO: remove the following lines
 	g.SendWords(GenerateWords())
-	g.SendMessage(fmt.Sprintf("The game has started. You all have received your word via private message.\nYou can start voting for a player with `%s @player` in private message", cmdVote))
+	g.SendVotes()
+	g.SendMessage(fmt.Sprintf("The game has started. You all have received your word and the list of players via private message.\nYou can vote for a player by clicking on his name"))
 
 	// TODO: uncomment the following lines to close the game
 	//if g.SendWords(GenerateWords()) {
@@ -135,7 +137,8 @@ func (g *Game) SendWords(word1, word2 string) bool {
 	for _, p := range g.players {
 		userChannel, err := g.session.UserChannelCreate(p.user.ID)
 		if err != nil {
-			g.SendMessage(fmt.Sprintf("The bot couldn't send the word to %s", p.user.Mention()))
+			// TODO: uncomment
+			//g.SendMessage(fmt.Sprintf("The bot couldn't send the word to %s", p.user.Mention()))
 			success = false
 			continue
 		}
@@ -151,6 +154,54 @@ func (g *Game) SendWords(word1, word2 string) bool {
 		_, _ = g.session.ChannelMessageSend(userChannel.ID, wordMsg)
 	}
 	return success
+}
+
+func (g *Game) SendVotes() bool {
+	success := true
+	g.ResetVotes()
+
+	for i, p := range g.players {
+		userChannel, err := g.session.UserChannelCreate(p.user.ID)
+		if err != nil {
+			// TODO: uncomment
+			//g.SendMessage(fmt.Sprintf("The bot couldn't send the votes to %s", p.user.Mention()))
+			success = false
+			continue
+		}
+
+		var playerList string
+		for j, otherPlayer := range g.players {
+			if i != j {
+				playerList += fmt.Sprintf("- [%s](%s?%s=%s&%s=%s)\n", otherPlayer.user.Username, serverUrl, voterIdParam, p.user.ID, voteForParam, otherPlayer.user.ID)
+			}
+		}
+		_, _ = g.session.ChannelMessageSendEmbed(userChannel.ID, &discordgo.MessageEmbed{
+			Title:       "Let's vote!",
+			Description: fmt.Sprintf("You can vote for one of these players:\n%s", playerList),
+			Color:       2148295,
+		})
+	}
+	return success
+}
+
+func (g *Game) ResetVotes() {
+	g.votes = make(map[string]uint)
+	for i, p := range g.players {
+		g.players[i].canVote = true
+		g.votes[p.user.ID] = 0
+	}
+}
+
+func (g *Game) Vote(voter, voteFor string) {
+	for _, p := range g.players {
+		if p.user.ID == voter {
+			if p.canVote {
+				g.votes[voteFor]++
+				p.canVote = false
+			}
+			break
+		}
+	}
 }
 
 func GenerateWords() (word1, word2 string) {
