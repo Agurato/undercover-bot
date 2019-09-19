@@ -129,6 +129,7 @@ func TestGame_ResetVotes(t *testing.T) {
 func TestGame_Vote(t *testing.T) {
 	g := Game{channel: &discordgo.Channel{ID: "test"}}
 	playerNumber := 4
+	stillVoting := false
 	// Add 4 players
 	for i := 0; i < playerNumber; i++ {
 		dummy := &discordgo.User{
@@ -143,10 +144,22 @@ func TestGame_Vote(t *testing.T) {
 
 	g.ResetVotes()
 
-	g.Vote("dummy0", "dummy1")
-	g.Vote("dummy1", "dummy2")
-	g.Vote("dummy2", "dummy1")
-	g.Vote("dummy3", "dummy0")
+	stillVoting = g.Vote("dummy0", "dummy1")
+	if !stillVoting {
+		t.Errorf("There should still be players voting")
+	}
+	stillVoting = g.Vote("dummy1", "dummy2")
+	if !stillVoting {
+		t.Errorf("There should still be players voting")
+	}
+	stillVoting = g.Vote("dummy2", "dummy1")
+	if !stillVoting {
+		t.Errorf("There should still be players voting")
+	}
+	stillVoting = g.Vote("dummy3", "dummy0")
+	if stillVoting {
+		t.Errorf("All players should have voted")
+	}
 
 	if len(g.votes) != playerNumber {
 		t.Errorf("There should be %d votes, there are %d", playerNumber, len(g.votes))

@@ -192,16 +192,19 @@ func (g *Game) ResetVotes() {
 	}
 }
 
-func (g *Game) Vote(voter, voteFor string) {
-	for _, p := range g.players {
+func (g *Game) Vote(voter, voteFor string) bool {
+	stillVoting := false
+	for i, p := range g.players {
 		if p.user.ID == voter {
 			if p.canVote {
 				g.votes[voteFor]++
-				p.canVote = false
+				g.players[i].canVote = false
 			}
-			break
 		}
+		stillVoting = stillVoting || g.players[i].canVote
 	}
+
+	return stillVoting
 }
 
 func GenerateWords() (word1, word2 string) {
