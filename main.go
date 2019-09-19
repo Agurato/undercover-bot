@@ -28,6 +28,7 @@ var (
 	botID string
 )
 
+// CheckError checks if err is not nil. If so, prints the msg and error, then panics
 func CheckError(msg string, err error) {
 	if err != nil {
 		fmt.Printf("%s: %+v", msg, err)
@@ -36,17 +37,23 @@ func CheckError(msg string, err error) {
 }
 
 func main() {
+	// Set random seed
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	go startServer()
+	// Start HTTP server for listening to votes
+	go StartServer()
 
+	// Instantiate a Discord Bot (token must be given as 1st parameter)
 	discord, err := discordgo.New("Bot " + os.Args[1])
 	CheckError("Error creating discord session", err)
 	user, err := discord.User("@me")
 	CheckError("Error retrieving account", err)
 
 	botID = user.ID
+
+	// Add handler when there is a new message in a channel accessible by the bot
 	discord.AddHandler(CommandHandler)
+	// Add handler to set the bot Status
 	discord.AddHandler(func(session *discordgo.Session, ready *discordgo.Ready) {
 		err = discord.UpdateStatus(0, "Undercover^^")
 		if err != nil {
@@ -67,6 +74,8 @@ func main() {
 	_ = discord.Close()
 }
 
+// CommandHandler handles new messages from users. It checks if the message is formatted
+// as a command readable by the bot (message starts with one of the possible commands)
 func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself
 	if m.Author.ID == botID {
@@ -117,7 +126,7 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			case cmdKick:
 				_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("No game is currently running. Start one by typing `%s` in any channel", cmdPlay))
 			}
-		// Is the game is waiting for players
+		// If the game is waiting for players
 		case Waiting:
 			switch args[0] {
 			// Using play command while another game is started results in an error
@@ -130,9 +139,14 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				} else {
 					_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("A game is waiting for players in %s, you can join there using `%s`", game.channel.Mention(), cmdJoin))
 				}
+			// Start a game
 			case cmdStart:
+				// Check if the game is on the same channel
 				if game.IsOnSameChannel(s, m) {
+					// The person starting the game must be the same one who instatiated the game
 					if m.Author.ID == game.GetCreator().ID {
+						// The minimum number of people must be reached before starting a game and
+						// command must be formatted as : <cmdStart> <number of undercovers> <number of Mr. Whites>
 						if len(args) != 3 {
 							_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("To start the game, use `%s <number of %s> <number of %s>`", cmdStart, Undercover.String(), MrWhite.String()))
 						} else if game.IsReady() {
@@ -141,6 +155,7 @@ func CommandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							if err1 != nil || err2 != nil || undercoverNumber < 0 || mrWhiteNumber < 0 {
 								_, _ = s.ChannelMessageSend(m.ChannelID, "The arguments must be whole positive numbers")
 							} else {
+								// Start the game
 								game.Start(undercoverNumber, mrWhiteNumber)
 							}
 						} else {

@@ -11,7 +11,9 @@ const (
 	voteForParam string = "vote_for"
 )
 
-func startServer() {
+// StartServer starts the HTTP server for people to vote.
+// Entry point is :8123/vote with GET parameters voter_id and vote_for as IDs of discord's users
+func StartServer() {
 	http.HandleFunc("/vote", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		voterId := q.Get(voterIdParam)
