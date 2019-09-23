@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"math/rand"
+
+	"github.com/bwmarrin/discordgo"
 )
 
+// GameState represents the state of a game (enum)
 type GameState uint8
 
 // A Game represents a game, whichever state it is in
@@ -18,9 +20,11 @@ type Game struct {
 }
 
 const (
-	// Game state enum
-	Off     GameState = 0
+	// Off is the state when the game is shut down
+	Off GameState = 0
+	// Waiting is the state when the game has been initialized and is waiting for players to join
 	Waiting GameState = 1
+	// Running is the state when the game has started and is running
 	Running GameState = 2
 
 	// Max number of players
@@ -57,8 +61,8 @@ func (g *Game) AddPlayer(user *discordgo.User) (msg string) {
 	return msg
 }
 
-// GetPlayerFromId returns the player with id given as parameter
-func (g Game) GetPlayerFromId(id string) (player Player) {
+// GetPlayerFromID returns the player with id given as parameter
+func (g Game) GetPlayerFromID(id string) (player Player) {
 	for _, p := range g.players {
 		if id == p.user.ID {
 			player = p
@@ -206,7 +210,7 @@ func (g *Game) SendVotes() bool {
 		var playerList string
 		for j, otherPlayer := range g.players {
 			if i != j {
-				playerList += fmt.Sprintf("- [%s](%s?%s=%s&%s=%s)\n", otherPlayer.user.Username, serverUrl, voterIdParam, p.user.ID, voteForParam, otherPlayer.user.ID)
+				playerList += fmt.Sprintf("- [%s](%s?%s=%s&%s=%s)\n", otherPlayer.user.Username, serverURL, voterIDParam, p.user.ID, voteForParam, otherPlayer.user.ID)
 			}
 		}
 		// Create Embed message for hyperlinks

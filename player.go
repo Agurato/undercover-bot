@@ -2,6 +2,7 @@ package main
 
 import "github.com/bwmarrin/discordgo"
 
+// Team represents a player's team (enum)
 type Team uint8
 
 // String returns Team name as a string
@@ -24,9 +25,12 @@ type Player struct {
 }
 
 const (
-	// Team enum
-	None       Team = 0
-	Citizen    Team = 1
+	// None is the initial team for players
+	None Team = 0
+	// Citizen is the team of Citizens
+	Citizen Team = 1
+	// Undercover is the team of Undercovers
 	Undercover Team = 2
-	MrWhite    Team = 3
+	// MrWhite is the team of Mr. Whites
+	MrWhite Team = 3
 )
