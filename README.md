@@ -3,6 +3,9 @@ Discord bot for the Undercover^^ game
 
 Inspired from [https://www.producthunt.com/posts/undercover-2](https://www.producthunt.com/posts/undercover-2)
 
+
+THIS IS STILL AN ONGOING PROJECT. IT IS NOT FUNCTIONAL.
+
 ## In a nutshell
 
 - Each player receives a secret word
